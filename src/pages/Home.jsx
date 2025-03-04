@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Navbar from '../components/Navbar/Index';
 import PokemonCard from '../components/PokemonCard/Index';
 import { Container, Grid2 } from '@mui/material';
@@ -10,10 +10,15 @@ export const Home = () => {
     const [loadedCount, setLoadedCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
 
+    const isFetching = useRef(false);
+
     useEffect(() => {
         getPokemons();
+
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scrol', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
     }, []);
 
     useEffect(() => {
@@ -21,43 +26,51 @@ export const Home = () => {
         getPokemons();
     }, [isLoading]);
 
-    const getPokemons = () => {
-        setIsLoading(true);
-        var endpoints = [];
-        const limit = 60;
-        const start = loadedCount + 1;
-
-        for (var i = start; i < start + limit; i++) {
-            endpoints.push(`https://pokeapi.co/api/v2/pokemon/${i}`);
-        }
-
-        axios.all(endpoints.map((endpoint) => axios.get(endpoint))).then((res) => {
-            setPokemons((prevPokemons) => [...prevPokemons, ...res]);
-            setLoadedCount((prevCount) => prevCount + limit);
-            setIsLoading(false);
-        });
-    }
-
-    const pokemonFilter = (search) => {
-        if (search === "")
-            getPokemons();
-        var filteredPokemons = [];
-        for (var i in pokemons) {
-            if (pokemons[i].data.name.includes(search)) {
-                filteredPokemons.push(pokemons[i])
-            }
-        }
-        setPokemons(filteredPokemons);
-    }
-
     const handleScroll = () => {
-        if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isLoading) return;
+        if (isLoading) return; // Garante que só chama uma vez
+        if (window.innerHeight + window.scrollY >= document.documentElement.offsetHeight - 100) {
+            setIsLoading(true);
+        }
+    };
+
+    const getPokemons = async () => {
+        if (isFetching.current) return;
+        isFetching.current = true;
         setIsLoading(true);
+        const limit = 48;
+        const offset = loadedCount;
+
+        try {
+            // Busca a lista de Pokémons com informações básicas
+            const response = await axios.get(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
+            const pokemonList = response.data.results;
+
+            // Busca os detalhes de cada Pokémon
+            const pokemonDetails = await Promise.all(
+                pokemonList.map(pokemon => axios.get(pokemon.url))
+            );
+
+            // Atualiza o estado com os novos Pokémons
+            setPokemons((prevPokemons) => {
+                const newPokemons = [...prevPokemons, ...pokemonDetails];
+                return newPokemons;
+            });
+
+            setLoadedCount((prevCount) => prevCount + limit);
+        }
+        catch (error) {
+            console.error("Erro ao buscar Pokémons: ", error);
+        }
+        finally {
+            setIsLoading(false)
+            isFetching.current = false;
+        }
     }
+
 
     return (
         <div>
-            <Navbar pokemonFilter={pokemonFilter} />
+            <Navbar />
             <Container maxWidth="false">
                 <Grid2 container spacing={3}>
                     {pokemons.length === 0 ? <Skeletons /> :

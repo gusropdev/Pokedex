@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardMedia, Typography, CardActionArea, Box, Chip, alpha, styled } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, CardActionArea, Box, Chip } from '@mui/material';
 
 const capitalize = (str) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -14,7 +14,7 @@ const renderTypes = (types) => {
                 backgroundColor: getTypeColor(type.type.name),
                 color: '#fff',
                 fontWeight: 'bold',
-                margin: '0 4px'
+                margin: '0 2px'
             }} />
     ))
 }
@@ -61,7 +61,7 @@ export default function PokemonCard({ name, sprite, types }) {
                     alt={name}
                     sx={{
                         objectFit: 'contain',
-                        height: '160px',
+                        height: '180px',
                         margin: '0 auto'
                     }}
                 />
