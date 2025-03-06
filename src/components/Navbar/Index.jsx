@@ -57,7 +57,7 @@ export default function Navbar({ }) {
             <AppBar position="static" sx={{ backgroundColor: "red" }}>
                 <Toolbar>
                     <Box display={'flex'} justifyContent={'space-between'} width={"100%"}>
-                        <Box component="img" src="/assets/pokemon-icon.png" height="3em" />
+                        <Box component="img" src={`${process.env.PUBLIC_URL}/assets/pokemon-icon.png`} height="3em" />
                         <Search>
                             <SearchIconWrapper>
                                 <SearchIcon />
